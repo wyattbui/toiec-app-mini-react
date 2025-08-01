@@ -16,7 +16,7 @@ export default function AnswerSheet({ total, current, onNext, userAnswers }: Pro
       </span>
       <button
         onClick={onNext}
-        className="bg-green-600 text-white px-6 py-2 rounded-xl shadow hover:bg-green-700 transition"
+        className="bg-green-600 text-white px-6 py-2 rounded-xl shadow hover:bg-green-700 transition cursor-pointer"
         disabled={current === total}
       >
         {current === total ? 'Nộp bài' : 'Câu tiếp theo'}
