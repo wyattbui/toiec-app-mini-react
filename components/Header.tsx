@@ -81,7 +81,23 @@ export default function Header() {
   ];
 
   return (
-    <AntHeader className="header-teal-theme shadow-lg px-6 flex items-center justify-between">
+    <AntHeader 
+      className="header-teal-theme shadow-lg px-6 flex items-center justify-between"
+      style={{
+        background: 'linear-gradient(to right, #14b8a6, #0d9488)',
+        borderBottom: '1px solid #0f766e',
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        zIndex: 9999,
+        width: '100%',
+        height: '80px',
+        display: 'flex',
+        alignItems: 'center',
+        padding: '0 24px'
+      }}
+    >
       <div className="flex items-center space-x-4">
         <Link href="/" className="flex items-center space-x-2 text-decoration-none hover:opacity-90 transition-opacity">
           <HomeOutlined style={{ color: '#f9a8d4', fontSize: '20px' }} />

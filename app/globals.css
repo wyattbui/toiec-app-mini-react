@@ -1,6 +1,6 @@
 @import "tailwindcss";
 
-/* Ant Design styles */
+/* Ant Design styles */  
 @import 'antd/dist/reset.css';
 
 /* Custom theme styles with high specificity */

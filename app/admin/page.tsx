@@ -49,7 +49,7 @@ export default function AdminPage() {
   ];
 
   return (
-    <div className="page-content min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-gray-100 p-4 sm:p-6">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-gray-100 p-4 sm:p-6">
       <div className="max-w-7xl mx-auto space-y-6">
         
         {/* Header */}
@@ -81,6 +81,13 @@ export default function AdminPage() {
               onClick={() => router.push('/admin/questions')}
             >
               Quản lý câu hỏi
+            </Button>
+            <Button 
+              size="large"
+              onClick={() => router.push('/admin/questions/simple')}
+              style={{ backgroundColor: '#10b981', borderColor: '#10b981', color: 'white' }}
+            >
+              📝 UI Simple
             </Button>
             <Button 
               size="large"
