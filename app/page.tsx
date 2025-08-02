@@ -1,6 +1,6 @@
 'use client';
 
-import { Typography, Button, Card } from 'antd';
+import { Typography, Button, Card, message } from 'antd';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -19,6 +19,17 @@ const parts = [
 export default function HomePage() {
   const router = useRouter();
   const { isAuthenticated, user } = useAuth();
+
+  const handlePartSelect = (partValue: number) => {
+    if (!isAuthenticated) {
+      // Lưu part được chọn vào localStorage để redirect sau khi đăng nhập
+      localStorage.setItem('selectedPart', partValue.toString());
+      message.info('Vui lòng đăng nhập để làm bài thi!');
+      router.push('/auth/login');
+    } else {
+      router.push(`/quiz?part=${partValue}`);
+    }
+  };
 
   return (
     <div 
@@ -50,7 +61,10 @@ export default function HomePage() {
             </div>
           )}
           <Paragraph className="text-center" style={{ color: '#6b7280' }}>
-            Chọn một phần bên dưới để bắt đầu luyện tập:
+            {isAuthenticated 
+              ? "Chọn một phần bên dưới để bắt đầu luyện tập:" 
+              : "Chọn phần muốn học (bạn sẽ cần đăng nhập):"
+            }
           </Paragraph>
           <div className="space-y-4 mt-6">
             {parts.map((part) => (
@@ -59,7 +73,7 @@ export default function HomePage() {
                 type="default"
                 size="large"
                 block
-                onClick={() => router.push(`/quiz?part=${part.value}`)}
+                onClick={() => handlePartSelect(part.value)}
                 className="teal-button text-left shadow-md hover:shadow-lg transition-all duration-200 py-4 h-auto"
                 style={{
                   minHeight: '60px',

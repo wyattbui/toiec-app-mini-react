@@ -73,7 +73,7 @@ export function extractUserFromToken(token: string): { id: string; name: string;
     // Tạo user object từ token payload
     const user = {
       id: payload.id || payload.sub || payload.user_id || 'unknown',
-      name: payload.name || payload.username || payload.display_name || payload.email || 'User',
+      name: payload.name || payload.username || payload.display_name || extractNameFromEmail(payload.email) || 'User',
       email: payload.email || payload.username || 'unknown@example.com'
     };
 
@@ -83,4 +83,11 @@ export function extractUserFromToken(token: string): { id: string; name: string;
     console.error('Error extracting user from token:', error);
     return null;
   }
+}
+
+// Helper function để extract name từ email
+function extractNameFromEmail(email?: string): string | null {
+  if (!email) return null;
+  const localPart = email.split('@')[0];
+  return localPart.charAt(0).toUpperCase() + localPart.slice(1);
 }

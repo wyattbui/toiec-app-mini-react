@@ -2,6 +2,9 @@
 'use client';
 
 import { useState } from 'react';
+import { Button, Space, Divider } from 'antd';
+import { SettingOutlined } from '@ant-design/icons';
+import { useRouter } from 'next/navigation';
 import PartsList from '@/components/PartsList';
 import QuestionsList from '@/components/QuestionsList';
 import type { ToiecPart, ToiecQuestion } from '@/hooks/useToiecApi';
@@ -9,13 +12,26 @@ import type { ToiecPart, ToiecQuestion } from '@/hooks/useToiecApi';
 export default function AdminPage() {
   const [selectedPart, setSelectedPart] = useState<ToiecPart | null>(null);
   const [selectedQuestion, setSelectedQuestion] = useState<ToiecQuestion | null>(null);
+  const router = useRouter();
 
   return (
     <div className="min-h-screen bg-gray-50 p-6 pt-32">
       <div className="max-w-4xl">
-        <h1 className="text-3xl font-bold text-gray-900 mb-8">
-          Quản lý TOEIC - Parts và Câu hỏi
-        </h1>
+        <div className="flex justify-between items-center mb-8">
+          <h1 className="text-3xl font-bold text-gray-900">
+            Quản lý TOEIC - Parts và Câu hỏi
+          </h1>
+          
+          <Space>
+            <Button 
+              type="dashed" 
+              icon={<SettingOutlined />}
+              onClick={() => router.push('/env')}
+            >
+              Cấu hình hệ thống
+            </Button>
+          </Space>
+        </div>
 
         <div className="space-y-8">
           {/* Parts List */}

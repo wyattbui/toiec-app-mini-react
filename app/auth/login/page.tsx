@@ -27,7 +27,15 @@ export default function LoginPage() {
       login(data.access_token, data.user);
       
       message.success('Đăng nhập thành công!');
-      router.push('/');
+      
+      // Kiểm tra có part được chọn trước đó không
+      const selectedPart = localStorage.getItem('selectedPart');
+      if (selectedPart) {
+        localStorage.removeItem('selectedPart'); // Xóa sau khi sử dụng
+        router.push(`/quiz?part=${selectedPart}`);
+      } else {
+        router.push('/');
+      }
       
     } catch (error) {
       message.error(error instanceof Error ? error.message : 'Có lỗi xảy ra');

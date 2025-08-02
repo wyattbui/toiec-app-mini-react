@@ -23,7 +23,8 @@ export default function Header() {
     userName: user?.name,
     userEmail: user?.email,
     loading,
-    isHydrated
+    isHydrated,
+    userObject: user // Thêm log để xem toàn bộ user object
   });
 
   const handleLogout = async () => {
@@ -94,10 +95,12 @@ export default function Header() {
               menu={{ items: userMenuItems }} 
               placement="bottomRight"
               trigger={['click']}
+              overlayStyle={{ zIndex: 10000 }}
+              getPopupContainer={(triggerNode) => triggerNode.parentElement || document.body}
             >
               <Button 
                 type="text" 
-                className="flex items-center space-x-2 h-auto p-2 rounded-lg transition-colors"
+                className="header-user-button flex items-center space-x-2 h-auto p-2 rounded-lg transition-colors max-w-xs overflow-hidden"
                 style={{ 
                   border: '1px solid rgba(134, 239, 172, 0.5)',
                   backgroundColor: 'transparent'
@@ -115,12 +118,19 @@ export default function Header() {
                   icon={<UserOutlined />}
                   style={{ backgroundColor: '#f472b6', border: '2px solid white' }}
                 />
-                <div className="hidden sm:flex flex-col items-start">
-                  <Text strong style={{ color: 'white', fontSize: '14px', lineHeight: 1 }}>
-                    {user?.name}
+                <div className="header-user-info hidden sm:flex flex-col items-start min-w-0 flex-1">
+                  <Text 
+                    strong 
+                    style={{ color: 'white', fontSize: '14px', lineHeight: 1.2 }} 
+                    className="truncate w-full"
+                  >
+                    {user?.name || 'User'}
                   </Text>
-                  <Text style={{ color: '#a7f3d0', fontSize: '12px', lineHeight: 1 }}>
-                    {user?.email}
+                  <Text 
+                    style={{ color: '#a7f3d0', fontSize: '12px', lineHeight: 1.2 }} 
+                    className="truncate w-full"
+                  >
+                    {user?.email || 'email@example.com'}
                   </Text>
                 </div>
               </Button>

@@ -3,6 +3,7 @@
 
 import { Card, Typography, Avatar, Descriptions, Button, Space } from 'antd';
 import { UserOutlined, EditOutlined, SettingOutlined } from '@ant-design/icons';
+import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import ProtectedRoute from '@/components/ProtectedRoute';
 
@@ -10,6 +11,7 @@ const { Title, Text } = Typography;
 
 export default function ProfilePage() {
   const { user } = useAuth();
+  const router = useRouter();
 
   if (!user) return null;
 
@@ -41,8 +43,11 @@ export default function ProfilePage() {
                     <Button type="primary" icon={<EditOutlined />}>
                       Chỉnh sửa thông tin
                     </Button>
-                    <Button icon={<SettingOutlined />}>
-                      Cài đặt
+                    <Button 
+                      icon={<SettingOutlined />}
+                      onClick={() => router.push('/env')}
+                    >
+                      Cài đặt hệ thống
                     </Button>
                   </Space>
                 </div>

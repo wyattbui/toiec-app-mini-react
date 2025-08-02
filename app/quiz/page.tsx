@@ -2,7 +2,7 @@
 "use client";
 
 import {useQuizStore} from '@/stores/useQuizStore';
-import {useEffect, useState} from 'react';
+import {useEffect, useState, Suspense} from 'react';
 import QuestionBlock from '@/components/QuestionBlock';
 import AnswerSheet from '@/components/AnswerSheet';
 import {useRouter} from 'next/navigation';
@@ -13,14 +13,16 @@ import {ClockCircleOutlined} from "@ant-design/icons";
 import { useSearchParams } from 'next/navigation';
 import config from '@/lib/config';
 
-export default function QuizPage() {
+function QuizContent() {
     const searchParams = useSearchParams();
+    const router = useRouter();
     const part = searchParams.get('part');
+    if (!part) {
+        router.push('/')
+    }
     const {questions, setQuestions, currentIndex, next, answer, userAnswers} = useQuizStore();
     const [loading, setLoading] = useState(true);
-    const router = useRouter();
     const [countDown, setCountDown] = useState(60);
-
     const { data, error, isLoading } = useSWR(
         part ? `${config.BE_SERVER}/questions/part/${part}` : null, 
         fetcher
@@ -146,5 +148,15 @@ export default function QuizPage() {
                 </div>
             </div>
         </Spin>
+    );
+}
+
+export default function QuizPage() {
+    return (
+        <Suspense fallback={<div className="min-h-screen flex items-center justify-center pt-32">
+            <Spin size="large" />
+        </div>}>
+            <QuizContent />
+        </Suspense>
     );
 }
