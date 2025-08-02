@@ -28,7 +28,7 @@ export default function ResultPage() {
   const COLORS = ['#00C49F', '#FF8042'];
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-green-50 to-white p-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-green-50 to-white p-4 pt-32">
       <Card className="max-w-md w-full shadow-lg rounded-xl">
         <div className="flex flex-col items-center space-y-6">
           <Title level={3} style={{ color: '#1677ff' }}>🎯 Kết quả của bạn</Title>

@@ -10,25 +10,28 @@ import useSWR from "swr";
 import fetcher from "@/lib/fetcher";
 import {Spin} from "antd";
 import {ClockCircleOutlined} from "@ant-design/icons";
+import { useSearchParams } from 'next/navigation';
+import config from '@/lib/config';
 
 export default function QuizPage() {
+    const searchParams = useSearchParams();
+    const part = searchParams.get('part');
     const {questions, setQuestions, currentIndex, next, answer, userAnswers} = useQuizStore();
     const [loading, setLoading] = useState(true);
     const router = useRouter();
     const [countDown, setCountDown] = useState(60);
 
-    const {
-        data,
-        error,
-        isLoading
-    } = useSWR("https://api.open-meteo.com/v1/forecast?latitude=52.52&longitude=13.41&current=temperature_2m,wind_speed_10m&hourly=temperature_2m,relative_humidity_2m,wind_speed_10m", fetcher);
+    const { data, error, isLoading } = useSWR(
+        part ? `${config.BE_SERVER}/questions/part/${part}` : null, 
+        fetcher
+    );
 
     console.log("------------------------");
     console.log("data", data);
     console.log("------------------------");
 
     useEffect(() => {
-        if (countDown === 50) router.push('/result')
+        if (countDown === 0) router.push('/result')
 
         if (countDown === 0) return;
         const timer = setInterval(() => {
@@ -41,15 +44,44 @@ export default function QuizPage() {
 
 
     useEffect(() => {
-        fetch('/api/mock-questions')
-            .then((res) => res.json())
-            .then((data) => {
-                setQuestions(data);
-                setLoading(false);
-            });
-    }, [setQuestions]);
+        if (data) {
+            // Xử lý cấu trúc dữ liệu từ backend API
+            const questions = Array.isArray(data) ? data : (data.questions || data.data || []);
+            setQuestions(questions);
+            setLoading(false);
+        }
+    }, [data, setQuestions]);
 
-    if (loading) return <div className="p-4 text-center text-gray-600">Loading questions...</div>;
+    if (loading || isLoading) return (
+        <div className="min-h-screen flex items-center justify-center">
+            <div className="text-center">
+                <Spin size="large" />
+                <div className="mt-4 text-gray-600">Đang tải câu hỏi...</div>
+            </div>
+        </div>
+    );
+
+    if (error) return (
+        <div className="min-h-screen flex items-center justify-center">
+            <div className="text-center text-red-600">
+                <p>Lỗi khi tải câu hỏi: {error.message}</p>
+                <button 
+                    onClick={() => window.location.reload()} 
+                    className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+                >
+                    Thử lại
+                </button>
+            </div>
+        </div>
+    );
+
+    if (!questions.length) return (
+        <div className="min-h-screen flex items-center justify-center">
+            <div className="text-center text-gray-600">
+                <p>Không có câu hỏi nào cho part này</p>
+            </div>
+        </div>
+    );
 
     const current = questions[currentIndex];
     const handleNext = () => {
@@ -60,28 +92,57 @@ export default function QuizPage() {
         }
     };
     return (
-        <Spin spinning={isLoading} tip="Loading" size="small">
-            <div className="min-h-screen bg-gradient-to-b from-green-100 to-white py-12 px-4">
-                <div className="max-w-3xl mx-auto bg-white rounded-2xl shadow-xl p-8 space-y-6">
-                    <h1 className="text-3xl font-bold text-green-700 text-center">TOEIC Luyện Tập</h1>
-                    {/*<h1 className="text-3xl font-bold text-green-700 text-center">latitude: {data?.latitude}</h1>*/}
-                    {/*<h1 className="text-3xl font-bold text-green-700 text-center">longitude: {data?.longitude}</h1>*/}
-                    <h1 className="text-xl font-bold text-[#fcba03] text-center"><ClockCircleOutlined/><span
-                        className="ml-2">{countDown ? countDown + " seconds" : " Overtime"} </span></h1>
-                    <div
-                        className="text-center text-sm text-blue-500">Part {currentIndex + 1} trong {questions.length}</div>
-                    <QuestionBlock
-                        question={current}
-                        onAnswer={(ans) => answer(current.id, ans)}
-                        selected={userAnswers[current.id]}
-                        onNext={handleNext}
-                    />
-                    <AnswerSheet
-                        total={questions.length}
-                        current={currentIndex + 1}
-                        onNext={handleNext}
-                        userAnswers={userAnswers}
-                    />
+        <Spin spinning={isLoading} tip="Đang tải...">
+            <div className="min-h-screen pt-28 pb-8 px-4" style={{ backgroundColor: '#f0fdfa' }}>
+                <div className="max-w-4xl mx-auto">
+                    {/* Header Section */}
+                    <div className="bg-white rounded-xl shadow-lg p-6 mb-6">
+                        <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
+                            <div className="text-center sm:text-left">
+                                <h1 className="text-2xl sm:text-3xl font-bold" style={{ color: '#0d9488' }}>
+                                    TOEIC Luyện Tập
+                                </h1>
+                                <div className="text-sm text-gray-600 mt-1">
+                                    Part {part} - Câu {currentIndex + 1} trong {questions.length}
+                                </div>
+                            </div>
+                            
+                            {/* Timer */}
+                            <div className="flex items-center justify-center bg-orange-50 px-4 py-2 rounded-lg border border-orange-200">
+                                <ClockCircleOutlined className="text-orange-500 mr-2" />
+                                <span className="font-bold text-orange-600">
+                                    {countDown > 0 ? `${countDown} giây` : "Hết thời gian"}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Main Content */}
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        {/* Question Section */}
+                        <div className="lg:col-span-2">
+                            <div className="bg-white rounded-xl shadow-lg p-6">
+                                <QuestionBlock
+                                    question={current}
+                                    onAnswer={(ans) => answer(current.id, ans)}
+                                    selected={userAnswers[current.id]}
+                                    onNext={handleNext}
+                                />
+                            </div>
+                        </div>
+
+                        {/* Answer Sheet Sidebar */}
+                        <div className="lg:col-span-1">
+                            <div className="bg-white rounded-xl shadow-lg p-6 sticky top-24">
+                                <AnswerSheet
+                                    total={questions.length}
+                                    current={currentIndex + 1}
+                                    onNext={handleNext}
+                                    userAnswers={userAnswers}
+                                />
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </Spin>

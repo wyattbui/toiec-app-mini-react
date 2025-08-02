@@ -1,17 +1,44 @@
 import { create } from 'zustand';
 
+export type Option = {
+  id: number;
+  questionId: number;
+  optionLetter: string;
+  optionText: string;
+  isCorrect: boolean;
+};
+
+export type Part = {
+  id: number;
+  partNumber: number;
+  name: string;
+  description: string;
+  skillType: string;
+};
+
 export type Question = {
-  id: string;
-  text: string;
-  options: string[];
+  id: number;
+  createdAt: string;
+  updatedAt: string;
+  partId: number;
+  questionText: string;
+  questionType: string;
+  difficulty: string;
+  explanation: string;
+  audioUrl?: string;
+  imageUrl?: string;
+  passageText?: string;
+  passageTitle?: string;
+  options: Option[];
+  part: Part;
 };
 
 type QuizStore = {
   questions: Question[];
   currentIndex: number;
-  userAnswers: Record<string, string>;
+  userAnswers: Record<number, string>; // Changed to number key
   setQuestions: (q: Question[]) => void;
-  answer: (id: string, answer: string) => void;
+  answer: (id: number, answer: string) => void; // Changed to number id
   next: () => void;
   reset: () => void;
 };

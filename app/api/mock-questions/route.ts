@@ -1,24 +1,15 @@
 import { NextResponse } from 'next/server';
 
-export async function GET() {
-  const questions = [
-    {
-      id: 'q1',
-      text: 'What does the man probably do?',
-      options: ['He is a teacher', 'He is a waiter', 'He is a mechanic', 'He is a doctor'],
-    },
-    {
-      id: 'q2',
-      text: 'Where is the woman going?',
-      options: ['To the office', 'To the bank', 'To the station', 'To the market'],
-    },
-    {
-      id: 'q3',
-      text: 'What time is the meeting?',
-      options: ['8 AM', '9 AM', '10 AM', '11 AM'],
-    },
-  ];
+export async function GET(request: Request) {
+  const { searchParams } = new URL(request.url);
+  const part = searchParams.get('part') || '1';
 
-  return NextResponse.json(questions);
+  // Fake data theo từng part
+  const data = {
+    '1': [{ id: 'p1-q1', text: 'Hình gì đây?', imageUrl: '/img.jpg', options: ['A', 'B', 'C', 'D'] }],
+    '2': [{ id: 'p2-q1', text: 'Nghe và chọn đúng', audioUrl: '/audio.mp3', options: ['Yes', 'No', 'Maybe', 'What?'] }],
+  };
+
+  return NextResponse.json(data[part as keyof typeof data] || []);
 }
 
