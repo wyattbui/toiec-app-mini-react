@@ -2,128 +2,157 @@
 'use client';
 
 import { useState } from 'react';
-import { Button, Space, Divider } from 'antd';
-import { SettingOutlined } from '@ant-design/icons';
+import { Button, Space, Card, Typography, Row, Col } from 'antd';
+import {
+  SettingOutlined,
+  QuestionCircleOutlined,
+  FileTextOutlined,
+  BarChartOutlined,
+  UsergroupAddOutlined
+} from '@ant-design/icons';
 import { useRouter } from 'next/navigation';
+import { useAuth } from '@/contexts/AuthContext';
 import PartsList from '@/components/PartsList';
 import QuestionsList from '@/components/QuestionsList';
 import type { ToiecPart, ToiecQuestion } from '@/hooks/useToiecApi';
+
+const { Title, Paragraph } = Typography;
 
 export default function AdminPage() {
   const [selectedPart, setSelectedPart] = useState<ToiecPart | null>(null);
   const [selectedQuestion, setSelectedQuestion] = useState<ToiecQuestion | null>(null);
   const router = useRouter();
+  const { user, isAuthenticated } = useAuth();
+
+  const adminFeatures = [
+    {
+      title: 'Quản lý câu hỏi',
+      description: 'Tạo, chỉnh sửa và xóa câu hỏi TOEIC',
+      icon: <QuestionCircleOutlined className="text-4xl text-blue-500" />,
+      path: '/admin/questions',
+      color: 'from-blue-500 to-blue-600'
+    },
+    {
+      title: 'Thống kê & Báo cáo',
+      description: 'Xem thống kê câu hỏi và kết quả',
+      icon: <BarChartOutlined className="text-4xl text-purple-500" />,
+      path: '/admin/statistics',
+      color: 'from-purple-500 to-purple-600'
+    },
+    {
+      title: 'Quản lý người dùng',
+      description: 'Quản lý tài khoản và quyền hạn',
+      icon: <UsergroupAddOutlined className="text-4xl text-orange-500" />,
+      path: '/admin/users',
+      color: 'from-orange-500 to-orange-600'
+    }
+  ];
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6 pt-32">
-      <div className="max-w-4xl">
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">
-            Quản lý TOEIC - Parts và Câu hỏi
-          </h1>
-          
-          <Space>
+    <div className="page-content min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-gray-100 p-4 sm:p-6">
+      <div className="max-w-7xl mx-auto space-y-6">
+        
+        {/* Header */}
+        <Card className="shadow-lg border-0 bg-gradient-to-r from-indigo-500 to-purple-600">
+          <div className="text-center text-white">
+            <Title level={2} className="text-white mb-2">
+              🛠️ Admin Dashboard
+            </Title>
+            <Paragraph className="text-indigo-100 text-lg mb-4">
+              Hệ thống quản lý TOEIC Mini
+            </Paragraph>
+            {isAuthenticated && user && (
+              <div className="bg-white/20 rounded-lg p-3 inline-block">
+                <span className="text-white">
+                  👤 Xin chào, <strong>{user.name}</strong>
+                </span>
+              </div>
+            )}
+          </div>
+        </Card>
+
+        {/* Quick Actions */}
+        <Card title="🚀 Thao tác nhanh" className="shadow-lg">
+          <div className="flex flex-wrap gap-3 justify-center sm:justify-start">
             <Button 
-              type="dashed" 
+              type="primary"
+              size="large"
+              icon={<QuestionCircleOutlined />}
+              onClick={() => router.push('/admin/questions')}
+            >
+              Quản lý câu hỏi
+            </Button>
+            <Button 
+              size="large"
               icon={<SettingOutlined />}
               onClick={() => router.push('/env')}
             >
               Cấu hình hệ thống
             </Button>
-          </Space>
+            <Button 
+              size="large"
+              onClick={() => router.push('/admin/test-api')}
+              style={{ backgroundColor: '#f97316', borderColor: '#f97316', color: 'white' }}
+            >
+              🧪 Test API
+            </Button>
+            <Button 
+              size="large"
+              onClick={() => router.push('/')}
+            >
+              Về trang chủ
+            </Button>
+          </div>
+        </Card>
+
+        {/* Admin Features Grid */}
+        <div>
+          <Title level={3} className="mb-4">📊 Chức năng quản lý</Title>
+          <Row gutter={[16, 16]}>
+            {adminFeatures.map((feature, index) => (
+              <Col xs={24} sm={12} lg={8} key={index}>
+                <Card
+                  hoverable
+                  className="h-full shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer"
+                  onClick={() => router.push(feature.path)}
+                  bodyStyle={{ padding: '24px' }}
+                >
+                  <div className={`bg-gradient-to-r ${feature.color} rounded-lg p-4 mb-4 text-center`}>
+                    {feature.icon}
+                  </div>
+                  <div className="text-center">
+                    <Title level={4} className="mb-2">
+                      {feature.title}
+                    </Title>
+                    <Paragraph type="secondary" className="text-sm">
+                      {feature.description}
+                    </Paragraph>
+                  </div>
+                </Card>
+              </Col>
+            ))}
+          </Row>
         </div>
 
-        <div className="space-y-8">
+        {/* Legacy Components (for backward compatibility) */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Parts List */}
-          <div className="bg-white rounded-lg shadow-sm border p-6">
+          <Card title="📝 Danh sách Parts" className="shadow-lg">
             <PartsList
               onSelectPart={setSelectedPart}
               selectedPartId={selectedPart?.id}
             />
-          </div>
-
+          </Card>
+          
           {/* Questions List */}
-          <div className="bg-white rounded-lg shadow-sm border p-6">
+          <Card title="❓ Danh sách câu hỏi" className="shadow-lg">
             <QuestionsList
               partId={selectedPart?.id || null}
               onSelectQuestion={setSelectedQuestion}
               selectedQuestionId={selectedQuestion?.id}
             />
-          </div>
+          </Card>
         </div>
-
-        {/* Selected Question Detail */}
-        {selectedQuestion && (
-          <div className="mt-8 bg-white rounded-lg shadow-sm border p-6">
-            <h2 className="text-xl font-semibold text-gray-800 mb-4">
-              Chi tiết câu hỏi
-            </h2>
-            <div className="space-y-4">
-              <div>
-                <span className="font-medium text-gray-700">ID:</span>
-                <span className="ml-2 text-gray-600">{selectedQuestion.id}</span>
-              </div>
-              <div>
-                <span className="font-medium text-gray-700">Part ID:</span>
-                <span className="ml-2 text-gray-600">{selectedQuestion.partId}</span>
-              </div>
-              <div>
-                <span className="font-medium text-gray-700">Loại:</span>
-                <span className="ml-2 text-gray-600">{selectedQuestion.type}</span>
-              </div>
-              <div>
-                <span className="font-medium text-gray-700">Nội dung:</span>
-                <div className="mt-1 p-3 bg-gray-50 rounded border">
-                  {selectedQuestion.content}
-                </div>
-              </div>
-              {selectedQuestion.options && selectedQuestion.options.length > 0 && (
-                <div>
-                  <span className="font-medium text-gray-700">Lựa chọn:</span>
-                  <ul className="mt-1 space-y-1">
-                    {selectedQuestion.options.map((option, index) => (
-                      <li key={index} className="flex items-center">
-                        <span className="w-6 h-6 bg-gray-200 rounded-full flex items-center justify-center text-sm font-medium mr-2">
-                          {String.fromCharCode(65 + index)}
-                        </span>
-                        <span>{option}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-              <div>
-                <span className="font-medium text-gray-700">Đáp án đúng:</span>
-                <span className="ml-2 font-semibold text-green-600">
-                  {selectedQuestion.correctAnswer}
-                </span>
-              </div>
-              {selectedQuestion.audioUrl && (
-                <div>
-                  <span className="font-medium text-gray-700">Audio:</span>
-                  <div className="mt-1">
-                    <audio controls className="w-full max-w-md">
-                      <source src={selectedQuestion.audioUrl} type="audio/mpeg" />
-                      Trình duyệt không hỗ trợ audio
-                    </audio>
-                  </div>
-                </div>
-              )}
-              {selectedQuestion.imageUrl && (
-                <div>
-                  <span className="font-medium text-gray-700">Hình ảnh:</span>
-                  <div className="mt-1">
-                    <img
-                      src={selectedQuestion.imageUrl}
-                      alt="Question image"
-                      className="max-w-md rounded border"
-                    />
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );

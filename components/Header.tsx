@@ -4,7 +4,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Layout, Button, Dropdown, Avatar, Typography, Space, message } from 'antd';
-import { UserOutlined, LogoutOutlined, SettingOutlined, HomeOutlined, LoginOutlined, UserAddOutlined } from '@ant-design/icons';
+import { UserOutlined, LogoutOutlined, SettingOutlined, HomeOutlined, LoginOutlined, UserAddOutlined, ToolOutlined } from '@ant-design/icons';
 import { useAuth } from '@/contexts/AuthContext';
 import Link from 'next/link';
 
@@ -55,6 +55,12 @@ export default function Header() {
       icon: <UserOutlined />,
       label: 'Thông tin cá nhân',
       onClick: () => router.push('/profile'),
+    },
+    {
+      key: 'admin',
+      icon: <ToolOutlined />,
+      label: 'Quản trị hệ thống',
+      onClick: () => router.push('/admin'),
     },
     {
       key: 'settings',

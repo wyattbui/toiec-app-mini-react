@@ -38,7 +38,7 @@ export const useParts = () => {
       setLoading(true);
       setError(null);
       
-      const response = await fetch('http://localhost:3333/api/parts');
+      const response = await fetch('/api/parts');
       if (!response.ok) {
         throw new Error('Failed to fetch parts');
       }
