@@ -15,14 +15,18 @@ import {
   Divider,
   Typography 
 } from 'antd';
+import type { UploadProps, UploadFile } from 'antd';
 import { 
   PlusOutlined, 
   DeleteOutlined, 
   UploadOutlined,
   SaveOutlined,
-  ClearOutlined 
+  ClearOutlined,
+  AudioOutlined,
+  FileImageOutlined
 } from '@ant-design/icons';
 import type { Question, Option, Part } from '@/stores/useQuizStore';
+import { useAuth } from '@/contexts/AuthContext';
 
 const { Title, Text } = Typography;
 const { TextArea } = Input;
@@ -43,6 +47,10 @@ export default function QuestionForm({
   loading = false 
 }: QuestionFormProps) {
   const [form] = Form.useForm();
+  const { token } = useAuth();
+  const [uploadLoading, setUploadLoading] = useState(false);
+  const [audioFileList, setAudioFileList] = useState<UploadFile[]>([]);
+  const [imageFileList, setImageFileList] = useState<UploadFile[]>([]);
   const [options, setOptions] = useState<Array<{
     id?: number;
     optionLetter: string;
@@ -115,10 +123,116 @@ export default function QuestionForm({
 
   const removeOption = (index: number) => {
     if (options.length <= 2) {
-      message.warning('Câu hỏi phải có ít nhất 2 lựa chọn!');
+      message.warning('Phải có ít nhất 2 lựa chọn!');
       return;
     }
-    setOptions(options.filter((_, i) => i !== index));
+    const newOptions = options.filter((_, i) => i !== index);
+    setOptions(newOptions);
+  };
+
+  // Upload handlers
+  const handleUpload = async (file: File, type: 'audio' | 'image') => {
+    setUploadLoading(true);
+    try {
+      const formData = new FormData();
+      formData.append('files', file);
+
+      const response = await fetch('/api/admin/upload', {
+        method: 'POST',
+        headers: {
+          ...(token && { 'Authorization': `Bearer ${token}` }),
+        },
+        body: formData,
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        const uploadedFile = data.files?.[0];
+        if (uploadedFile) {
+          // Update form field with uploaded URL
+          if (type === 'audio') {
+            form.setFieldValue('audioUrl', uploadedFile.url);
+          } else {
+            form.setFieldValue('imageUrl', uploadedFile.url);
+          }
+          message.success(`Upload ${type === 'audio' ? 'audio' : 'hình ảnh'} thành công!`);
+          return true;
+        }
+      } else {
+        throw new Error('Upload failed');
+      }
+    } catch (error) {
+      message.error(`Lỗi upload ${type === 'audio' ? 'audio' : 'hình ảnh'}!`);
+      return false;
+    } finally {
+      setUploadLoading(false);
+    }
+  };
+
+  const audioUploadProps: UploadProps = {
+    name: 'files',
+    multiple: false,
+    accept: '.mp3,.wav,.m4a',
+    fileList: audioFileList,
+    beforeUpload: (file) => {
+      // Check file type
+      const isAudio = file.type.startsWith('audio/');
+      if (!isAudio) {
+        message.error('Chỉ được upload file audio!');
+        return false;
+      }
+      
+      // Check file size (max 10MB)
+      const isLt10M = file.size / 1024 / 1024 < 10;
+      if (!isLt10M) {
+        message.error('File audio phải nhỏ hơn 10MB!');
+        return false;
+      }
+
+      // Handle upload
+      handleUpload(file, 'audio');
+      return false; // Prevent default upload
+    },
+    onChange: ({ fileList }) => {
+      setAudioFileList(fileList.slice(-1)); // Keep only last file
+    },
+    onRemove: () => {
+      form.setFieldValue('audioUrl', '');
+      setAudioFileList([]);
+    },
+  };
+
+  const imageUploadProps: UploadProps = {
+    name: 'files',
+    multiple: false,
+    accept: '.jpg,.jpeg,.png,.gif',
+    fileList: imageFileList,
+    beforeUpload: (file) => {
+      // Check file type
+      const isImage = file.type.startsWith('image/');
+      if (!isImage) {
+        message.error('Chỉ được upload file hình ảnh!');
+        return false;
+      }
+      
+      // Check file size (max 5MB)
+      const isLt5M = file.size / 1024 / 1024 < 5;
+      if (!isLt5M) {
+        message.error('File hình ảnh phải nhỏ hơn 5MB!');
+        return false;
+      }
+
+      // Handle upload
+      handleUpload(file, 'image');
+      return false; // Prevent default upload
+    },
+    onChange: ({ fileList }) => {
+      setImageFileList(fileList.slice(-1)); // Keep only last file
+    },
+    onRemove: () => {
+      form.setFieldValue('imageUrl', '');
+      setImageFileList([]);
+    },
   };
 
   const handleSubmit = async (values: any) => {
@@ -146,7 +260,22 @@ export default function QuestionForm({
 
     try {
       await onSave(questionData);
-      message.success(question ? 'Cập nhật câu hỏi thành công!' : 'Tạo câu hỏi thành công!');
+      
+      // If this is create mode (not edit), reset form after successful creation
+      if (!question) {
+        form.resetFields();
+        setOptions([
+          { optionLetter: 'A', optionText: '', isCorrect: false },
+          { optionLetter: 'B', optionText: '', isCorrect: false },
+          { optionLetter: 'C', optionText: '', isCorrect: false },
+          { optionLetter: 'D', optionText: '', isCorrect: false },
+        ]);
+        setAudioFileList([]);
+        setImageFileList([]);
+        message.success('Tạo câu hỏi thành công! Form đã được làm mới để tạo câu hỏi tiếp theo.');
+      } else {
+        message.success('Cập nhật câu hỏi thành công!');
+      }
     } catch (error) {
       message.error('Có lỗi xảy ra khi lưu câu hỏi!');
     }
@@ -222,26 +351,69 @@ export default function QuestionForm({
         </Form.Item>
 
         {/* Media URLs */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Form.Item
-            label="URL Audio (tùy chọn)"
-            name="audioUrl"
-          >
-            <Input 
-              placeholder="https://example.com/audio.mp3"
-              prefix={<UploadOutlined />}
-            />
-          </Form.Item>
+        <Divider orientation="left">📁 Media Files</Divider>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Audio Upload */}
+          <div>
+            <Form.Item
+              label={
+                <span>
+                  <AudioOutlined /> URL Audio (tùy chọn)
+                </span>
+              }
+              name="audioUrl"
+            >
+              <Input 
+                placeholder="https://example.com/audio.mp3"
+                prefix={<UploadOutlined />}
+              />
+            </Form.Item>
+            <div className="mt-2">
+              <Upload {...audioUploadProps}>
+                <Button 
+                  icon={<UploadOutlined />} 
+                  loading={uploadLoading}
+                  size="small"
+                >
+                  📎 Upload Audio (.mp3, .wav, .m4a)
+                </Button>
+              </Upload>
+              <Text type="secondary" className="text-xs mt-1 block">
+                Tối đa 10MB. Sẽ tự động cập nhật URL above sau khi upload.
+              </Text>
+            </div>
+          </div>
 
-          <Form.Item
-            label="URL Hình ảnh (tùy chọn)"
-            name="imageUrl"
-          >
-            <Input 
-              placeholder="https://example.com/image.jpg"
-              prefix={<UploadOutlined />}
-            />
-          </Form.Item>
+          {/* Image Upload */}
+          <div>
+            <Form.Item
+              label={
+                <span>
+                  <FileImageOutlined /> URL Hình ảnh (tùy chọn)
+                </span>
+              }
+              name="imageUrl"
+            >
+              <Input 
+                placeholder="https://example.com/image.jpg"
+                prefix={<UploadOutlined />}
+              />
+            </Form.Item>
+            <div className="mt-2">
+              <Upload {...imageUploadProps}>
+                <Button 
+                  icon={<UploadOutlined />} 
+                  loading={uploadLoading}
+                  size="small"
+                >
+                  🖼️ Upload Image (.jpg, .png, .gif)
+                </Button>
+              </Upload>
+              <Text type="secondary" className="text-xs mt-1 block">
+                Tối đa 5MB. Sẽ tự động cập nhật URL above sau khi upload.
+              </Text>
+            </div>
+          </div>
         </div>
 
         {/* Passage (for reading questions) */}

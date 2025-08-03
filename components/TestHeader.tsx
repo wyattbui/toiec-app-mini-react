@@ -54,10 +54,10 @@ export default function SimpleHeader() {
           </>
         ) : (
           <>
-            <Link href="/auth" style={{ color: '#a7f3d0', textDecoration: 'none' }}>
+            <Link href="/auth/login" style={{ color: '#a7f3d0', textDecoration: 'none' }}>
               Đăng nhập
             </Link>
-            <Link href="/auth" style={{ color: '#a7f3d0', textDecoration: 'none' }}>
+            <Link href="/auth/signup" style={{ color: '#a7f3d0', textDecoration: 'none' }}>
               Đăng ký
             </Link>
           </>

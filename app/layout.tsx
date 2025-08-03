@@ -6,7 +6,7 @@ import {Layout, Menu} from 'antd';
 import {HomeOutlined, FileTextOutlined, BarChartOutlined} from '@ant-design/icons';
 import Providers from './providers';
 import { AuthProvider } from '@/contexts/AuthContext';
-import TestHeader from '@/components/TestHeader';
+import Header from '@/components/Header';
 
 export default function RootLayout({children}: { children: React.ReactNode }) {
     const {Content} = Layout;
@@ -17,7 +17,7 @@ export default function RootLayout({children}: { children: React.ReactNode }) {
         <AuthProvider>
             <Providers>
                 <Layout className="min-h-screen">
-                    <TestHeader />
+                    <Header />
                     <Content className="flex-1">
                         {children}
                     </Content>

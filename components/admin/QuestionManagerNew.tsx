@@ -10,19 +10,16 @@ import {
   message, 
   Popconfirm, 
   Tag, 
-  Modal,
   Typography,
   Input,
-  Select,
-  Divider
+  Select
 } from 'antd';
 import { 
   EditOutlined, 
   DeleteOutlined, 
   PlusOutlined, 
   EyeOutlined,
-  SearchOutlined,
-  ReloadOutlined 
+  SearchOutlined 
 } from '@ant-design/icons';
 import type { Question, Part } from '@/stores/useQuizStore';
 import QuestionForm from './QuestionForm';
@@ -40,10 +37,9 @@ export default function QuestionManager({ parts }: QuestionManagerProps) {
   const [allQuestions, setAllQuestions] = useState<Question[]>([]); // Store all questions
   const [loading, setLoading] = useState(false);
   const [selectedPart, setSelectedPart] = useState<number | null>(null); // For filtering
+  const [isFormVisible, setIsFormVisible] = useState(true); // Always show form by default
   const [editingQuestion, setEditingQuestion] = useState<Question | null>(null);
   const [searchText, setSearchText] = useState('');
-  const [isCreateModalVisible, setIsCreateModalVisible] = useState(false);
-  const [isEditModalVisible, setIsEditModalVisible] = useState(false);
   const { token } = useAuth();
 
   // Load all questions on mount
@@ -61,11 +57,7 @@ export default function QuestionManager({ parts }: QuestionManagerProps) {
       setLoading(true);
       // Load questions from all parts
       const allPromises = parts.map(part => 
-        fetch(`/api/admin/questions?partId=${part.id}`, {
-          headers: {
-            ...(token && { 'Authorization': `Bearer ${token}` }),
-          },
-        })
+        fetch(`/api/admin/questions?partId=${part.id}`)
           .then(res => res.ok ? res.json() : [])
           .catch(() => [])
       );
@@ -116,9 +108,10 @@ export default function QuestionManager({ parts }: QuestionManagerProps) {
 
       if (response.ok) {
         message.success('Tạo câu hỏi thành công!');
-        setIsCreateModalVisible(false);
         // Reload all questions to get updated data
         await loadAllQuestions();
+        // Reset form but keep it visible
+        setEditingQuestion(null);
       } else {
         const error = await response.json();
         message.error(error.message || 'Không thể tạo câu hỏi!');
@@ -143,9 +136,8 @@ export default function QuestionManager({ parts }: QuestionManagerProps) {
       });
 
       if (response.ok) {
-        message.success('Cập nhật câu hỏi thành công!');
-        setIsEditModalVisible(false);
         setEditingQuestion(null);
+        message.success('Cập nhật câu hỏi thành công!');
         
         // Reload all questions to get updated data
         await loadAllQuestions();
@@ -170,8 +162,8 @@ export default function QuestionManager({ parts }: QuestionManagerProps) {
       });
 
       if (response.ok) {
+        setQuestions(prev => prev.filter(q => q.id !== questionId));
         message.success('Xóa câu hỏi thành công!');
-        // Reload all questions
         await loadAllQuestions();
       } else {
         const error = await response.json().catch(() => ({}));
@@ -183,23 +175,8 @@ export default function QuestionManager({ parts }: QuestionManagerProps) {
     }
   };
 
-  const handleCreate = () => {
-    setEditingQuestion(null);
-    setIsCreateModalVisible(true);
-  };
-
   const handleEdit = (question: Question) => {
     setEditingQuestion(question);
-    setIsEditModalVisible(true);
-  };
-
-  const handleCancelCreate = () => {
-    setIsCreateModalVisible(false);
-  };
-
-  const handleCancelEdit = () => {
-    setIsEditModalVisible(false);
-    setEditingQuestion(null);
   };
 
   const columns = [
@@ -207,16 +184,16 @@ export default function QuestionManager({ parts }: QuestionManagerProps) {
       title: 'ID',
       dataIndex: 'id',
       key: 'id',
-      width: 60,
+      width: 80,
     },
     {
       title: 'Part',
       dataIndex: 'partId',
       key: 'partId',
-      width: 80,
+      width: 100,
       render: (partId: number) => {
         const part = parts.find(p => p.id === partId);
-        return part ? `Part ${part.partNumber}` : `Part ${partId}`;
+        return <Tag color="blue">Part {part?.partNumber}</Tag>;
       },
     },
     {
@@ -255,38 +232,33 @@ export default function QuestionManager({ parts }: QuestionManagerProps) {
           difficulty === 'easy' ? 'green' :
           difficulty === 'medium' ? 'orange' : 'red'
         }>
-          {difficulty === 'easy' ? 'Dễ' :
-           difficulty === 'medium' ? 'TB' : 'Khó'}
+          {difficulty === 'easy' ? 'Dễ' : difficulty === 'medium' ? 'TB' : 'Khó'}
         </Tag>
       ),
     },
     {
       title: 'Số lựa chọn',
-      key: 'optionsCount',
+      key: 'optionCount',
       width: 100,
-      render: (_: any, record: Question) => record.options?.length || 0,
+      render: (record: Question) => record.options?.length || 0,
     },
     {
       title: 'Thao tác',
       key: 'actions',
       width: 150,
-      render: (_: any, record: Question) => (
-        <Space size="small">
+      render: (record: Question) => (
+        <Space>
           <Button 
             type="text" 
             size="small"
             icon={<EyeOutlined />}
             onClick={() => {
-              Modal.info({
-                title: 'Chi tiết câu hỏi',
-                width: 800,
+              // Show question details
+              message.info({
                 content: (
-                  <div className="space-y-4">
-                    <div>
-                      <strong>Nội dung:</strong>
-                      <p>{record.questionText}</p>
-                    </div>
-                    {record.options && (
+                  <div className="space-y-2">
+                    <div><strong>Câu hỏi:</strong> {record.questionText}</div>
+                    {record.options && record.options.length > 0 && (
                       <div>
                         <strong>Lựa chọn:</strong>
                         <ul className="mt-2">
@@ -307,6 +279,7 @@ export default function QuestionManager({ parts }: QuestionManagerProps) {
                     )}
                   </div>
                 ),
+                duration: 8,
               });
             }}
           />
@@ -320,8 +293,6 @@ export default function QuestionManager({ parts }: QuestionManagerProps) {
             title="Xóa câu hỏi"
             description="Bạn có chắc chắn muốn xóa câu hỏi này?"
             onConfirm={() => handleDeleteQuestion(record.id)}
-            okText="Xóa"
-            cancelText="Hủy"
           >
             <Button 
               type="text" 
@@ -337,30 +308,20 @@ export default function QuestionManager({ parts }: QuestionManagerProps) {
 
   return (
     <div className="space-y-6">
-      {/* Questions Management */}
-      <Card title="📋 Quản lý câu hỏi TOEIC" className="shadow-lg">
-        {/* Actions Bar */}
-        <div className="mb-4 flex justify-between items-center">
-          <Button 
-            type="primary"
-            size="large"
-            icon={<PlusOutlined />}
-            onClick={handleCreate}
-            className="bg-blue-500 hover:bg-blue-600"
-          >
-            🆕 Tạo câu hỏi mới
-          </Button>
-          
-          <Button 
-            onClick={() => loadAllQuestions()}
-            loading={loading}
-            icon={<ReloadOutlined />}
-            size="large"
-          >
-            Tải lại
-          </Button>
-        </div>
+      {/* Always show form first */}
+      <QuestionForm
+        question={editingQuestion}
+        parts={parts}
+        onSave={editingQuestion ? handleUpdateQuestion : handleCreateQuestion}
+        onCancel={() => {
+          setEditingQuestion(null);
+          // Don't hide form, just clear editing state
+        }}
+        loading={loading}
+      />
 
+      {/* Questions Management */}
+      <Card title="📋 Danh sách câu hỏi" className="shadow-lg">
         {/* Filters */}
         <div className="mb-4 space-y-3">
           <div className="flex flex-col sm:flex-row gap-4">
@@ -389,8 +350,6 @@ export default function QuestionManager({ parts }: QuestionManagerProps) {
                 onChange={(e) => setSearchText(e.target.value)}
                 style={{ width: '100%' }}
                 size="large"
-                allowClear
-                enterButton={<SearchOutlined />}
               />
             </div>
           </div>
@@ -400,6 +359,13 @@ export default function QuestionManager({ parts }: QuestionManagerProps) {
               Hiển thị {questions.length} / {allQuestions.length} câu hỏi
               {selectedPart && ` (Part ${parts.find(p => p.id === selectedPart)?.partNumber})`}
             </Text>
+            <Button 
+              onClick={() => loadAllQuestions()}
+              loading={loading}
+              icon={<PlusOutlined />}
+            >
+              Tải lại
+            </Button>
           </div>
         </div>
 
@@ -419,42 +385,6 @@ export default function QuestionManager({ parts }: QuestionManagerProps) {
           scroll={{ x: 800 }}
         />
       </Card>
-
-      {/* Create Question Modal */}
-      <Modal
-        title="🆕 Tạo câu hỏi mới"
-        open={isCreateModalVisible}
-        onCancel={handleCancelCreate}
-        footer={null}
-        width={900}
-        destroyOnClose
-      >
-        <QuestionForm
-          question={null}
-          parts={parts}
-          onSave={handleCreateQuestion}
-          onCancel={handleCancelCreate}
-          loading={loading}
-        />
-      </Modal>
-
-      {/* Edit Question Modal */}
-      <Modal
-        title="✏️ Chỉnh sửa câu hỏi"
-        open={isEditModalVisible}
-        onCancel={handleCancelEdit}
-        footer={null}
-        width={900}
-        destroyOnClose
-      >
-        <QuestionForm
-          question={editingQuestion}
-          parts={parts}
-          onSave={handleUpdateQuestion}
-          onCancel={handleCancelEdit}
-          loading={loading}
-        />
-      </Modal>
     </div>
   );
 }

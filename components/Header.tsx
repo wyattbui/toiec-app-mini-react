@@ -56,12 +56,12 @@ export default function Header() {
       label: 'Thông tin cá nhân',
       onClick: () => router.push('/profile'),
     },
-    {
-      key: 'admin',
-      icon: <ToolOutlined />,
-      label: 'Quản trị hệ thống',
-      onClick: () => router.push('/admin'),
-    },
+    // {
+    //   key: 'admin',
+    //   icon: <ToolOutlined />,
+    //   label: 'Quản trị hệ thống',
+    //   onClick: () => router.push('/admin'),
+    // },
     {
       key: 'settings',
       icon: <SettingOutlined />,
@@ -102,7 +102,7 @@ export default function Header() {
         <Link href="/" className="flex items-center space-x-2 text-decoration-none hover:opacity-90 transition-opacity">
           <HomeOutlined style={{ color: '#f9a8d4', fontSize: '20px' }} />
           <Text strong style={{ color: 'white', fontSize: '20px' }}>
-            TOEIC Mini
+            TOEIC Training Mini
           </Text>
         </Link>
       </div>
@@ -172,7 +172,7 @@ export default function Header() {
                   fontWeight: 500
                 }}
               >
-                <span className="hidden sm:inline">Đăng nhập</span>
+                <span className="hidden sm:inline">Đăng nhập kkk</span>
               </Button>
             </Link>
             <Link href="/auth/signup">
